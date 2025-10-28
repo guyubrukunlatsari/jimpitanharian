@@ -18,10 +18,11 @@
   .filter-container button:hover { background: #00ff88; }
 
   .table-wrapper { overflow-x: auto; -webkit-overflow-scrolling: touch; }
-  table { width: 100%; border-collapse: collapse; background: #1a1a1a; min-width: 700px; }
+  table { width: 100%; border-collapse: collapse; background: #1a1a1a; min-width: 750px; }
   th, td { padding: 8px 10px; text-align: center; border-bottom: 1px solid #333; font-size: 0.85rem; }
   th { background-color: #00cc66; color: #000; }
-  td.hasil { text-align: right; color: #00ff99; font-weight: bold; }
+  td.hasil { text-align: right; color: #00ff99; font-weight: bold; min-width: 150px; }
+  th:nth-child(7) { min-width: 150px; }
   tr:nth-child(even) { background-color: #1e1e1e; }
   tr:hover { background-color: #2a2a2a; }
   .highlight { background-color: #00ff44; color: #000; font-weight: bold; border-radius: 3px; padding: 0 2px; }
