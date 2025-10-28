@@ -19,9 +19,9 @@
 
   .table-wrapper { overflow-x: auto; -webkit-overflow-scrolling: touch; }
   table { width: 100%; border-collapse: collapse; background: #1a1a1a; min-width: 750px; }
-  th, td { padding: 8px 10px; text-align: center; border-bottom: 1px solid #333; font-size: 0.85rem; }
+  th, td { padding: 6px 8px; text-align: center; border-bottom: 1px solid #333; font-size: 0.85rem; }
   th { background-color: #00cc66; color: #000; }
-  td.hasil { text-align: right; color: #00ff99; font-weight: bold; min-width: 150px; }
+  td.hasil { text-align: right; color: #00ff99; font-weight: bold; min-width: 120px; }
   tr:nth-child(even) { background-color: #1e1e1e; }
   tr:hover { background-color: #2a2a2a; }
   .highlight { background-color: #00ff44; color: #000; font-weight: bold; border-radius: 3px; padding: 0 2px; }
@@ -36,7 +36,7 @@
   @media (max-width: 600px) {
     .filter-container input, .filter-container button { width: 100%; max-width: 220px; }
     h1 { font-size: 1.2rem; }
-    table th, table td { font-size: 0.75rem; padding: 6px 5px; }
+    table th, table td { font-size: 0.75rem; padding: 5px 4px; }
   }
 </style>
 </head>
@@ -103,10 +103,9 @@ fetch(url)
   try {
     const json=JSON.parse(rep.substring(47).slice(0,-2));
     const rows=json.table.rows.map(r=>r.c.map(c=>c?c.v:""));
-    allData=rows.map((r,i)=>{
+    allData=rows.map(r=>{
       const t=parseDate(r[1]);
       return {
-        no:i+1, // nomor urut lama dulu
         tanggalText:t.text,
         tanggalObj:t.raw,
         hari:r[2]||"",
@@ -119,8 +118,8 @@ fetch(url)
     });
     // Urutkan data terbaru di atas
     allData.sort((a,b)=>b.tanggalObj - a.tanggalObj);
-    // Nomor urut menyesuaikan: data lama No rendah → data baru No tinggi
-    allData.forEach((row,index)=>row.no=index+1);
+    // Nomor urut: data terbaru di atas = No tertinggi
+    allData.forEach((row,index)=>row.no=allData.length - index);
     filteredData=allData; renderTable();
   } catch(err){
     document.getElementById("table-body").innerHTML=`<tr><td colspan="8">❌ Gagal memuat data: ${err.message}</td></tr>`;
@@ -130,7 +129,11 @@ fetch(url)
   document.getElementById("table-body").innerHTML=`<tr><td colspan="8">❌ Gagal memuat data: ${err.message}</td></tr>`;
 });
 
-function highlightText(text, keyword){ if(!keyword) return text; const regex=new RegExp(`(${keyword.replace(/[-/\\^$*+?.()|[\]{}]/g,'\\$&')})`,'gi'); return text.replace(regex,'<span class="highlight">$1</span>'); }
+function highlightText(text, keyword){
+  if(!keyword) return text;
+  const regex=new RegExp(`(${keyword.replace(/[-/\\^$*+?.()|[\]{}]/g,'\\$&')})`,'gi');
+  return text.replace(regex,'<span class="highlight">$1</span>');
+}
 
 function getFilteredData(){
   const startDateVal=document.getElementById("startDate").value;
@@ -138,7 +141,8 @@ function getFilteredData(){
   const startDate=startDateVal?new Date(startDateVal):null;
   const endDate=endDateVal?new Date(endDateVal):null;
   return allData.filter(row=>{
-    let matchDate=true; if(startDate && endDate) matchDate=row.tanggalObj>=startDate && row.tanggalObj<=endDate;
+    let matchDate=true; 
+    if(startDate && endDate) matchDate=row.tanggalObj>=startDate && row.tanggalObj<=endDate;
     let matchText=currentKeyword?Object.values(row).some(val=>String(val).toLowerCase().includes(currentKeyword)):true;
     return matchDate && matchText;
   });
@@ -146,11 +150,17 @@ function getFilteredData(){
 
 function renderTable(){
   filteredData=getFilteredData();
-  const tbody=document.getElementById("table-body"); tbody.innerHTML="";
-  const start=(currentPage-1)*rowsPerPage; const end=start+rowsPerPage;
+  const tbody=document.getElementById("table-body"); 
+  tbody.innerHTML="";
+  const start=(currentPage-1)*rowsPerPage; 
+  const end=start+rowsPerPage;
   const dataToShow=filteredData.slice(start,end);
-  if(dataToShow.length===0){ tbody.innerHTML=`<tr><td colspan="8">Tidak ada data</td></tr>`; document.getElementById("pagination").innerHTML=""; return; }
-  dataToShow.forEach((row,index)=>{
+  if(dataToShow.length===0){
+    tbody.innerHTML=`<tr><td colspan="8">Tidak ada data</td></tr>`; 
+    document.getElementById("pagination").innerHTML=""; 
+    return; 
+  }
+  dataToShow.forEach((row)=>{
     const tr=document.createElement("tr");
     tr.innerHTML=`
       <td>${row.no}</td>
@@ -168,19 +178,44 @@ function renderTable(){
 }
 
 function renderPagination(){
-  const pagination=document.getElementById("pagination"); pagination.innerHTML="";
+  const pagination=document.getElementById("pagination"); 
+  pagination.innerHTML="";
   const totalPages=Math.ceil(filteredData.length/rowsPerPage);
   if(totalPages<=1) return;
-  const prev=document.createElement("button"); prev.textContent="⬅️"; prev.disabled=currentPage===1; prev.onclick=()=>{currentPage--; renderTable();}; pagination.appendChild(prev);
-  for(let i=1;i<=totalPages;i++){ const b=document.createElement("button"); b.textContent=i; if(i===currentPage) b.classList.add("active"); b.onclick=()=>{currentPage=i; renderTable();}; pagination.appendChild(b);}
-  const next=document.createElement("button"); next.textContent="➡️"; next.disabled=currentPage===totalPages; next.onclick=()=>{currentPage++; renderTable();}; pagination.appendChild(next);
+  const prev=document.createElement("button"); 
+  prev.textContent="⬅️"; 
+  prev.disabled=currentPage===1; 
+  prev.onclick=()=>{currentPage--; renderTable();}; 
+  pagination.appendChild(prev);
+
+  for(let i=1;i<=totalPages;i++){ 
+    const b=document.createElement("button"); 
+    b.textContent=i; 
+    if(i===currentPage) b.classList.add("active"); 
+    b.onclick=()=>{currentPage=i; renderTable();}; 
+    pagination.appendChild(b);
+  }
+
+  const next=document.createElement("button"); 
+  next.textContent="➡️"; 
+  next.disabled=currentPage===totalPages; 
+  next.onclick=()=>{currentPage++; renderTable();}; 
+  pagination.appendChild(next);
 }
 
 document.getElementById("searchBox").addEventListener("input",()=>{ currentKeyword=document.getElementById("searchBox").value.toLowerCase(); currentPage=1; renderTable(); });
 document.getElementById("startDate").addEventListener("change",()=>{currentPage=1; renderTable();});
 document.getElementById("endDate").addEventListener("change",()=>{currentPage=1; renderTable();});
 
-function resetFilter(){ document.getElementById("searchBox").value=""; document.getElementById("startDate").value=""; document.getElementById("endDate").value=""; currentKeyword=""; filteredData=allData; currentPage=1; renderTable(); }
+function resetFilter(){ 
+  document.getElementById("searchBox").value=""; 
+  document.getElementById("startDate").value=""; 
+  document.getElementById("endDate").value=""; 
+  currentKeyword=""; 
+  filteredData=allData; 
+  currentPage=1; 
+  renderTable(); 
+}
 
 async function exportPDF(){
   const { jsPDF }=window.jspdf;
