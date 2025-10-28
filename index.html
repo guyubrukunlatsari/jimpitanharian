@@ -153,6 +153,15 @@
         });
     }
 
+    // Format tanggal Indonesia (contoh: 28 Oktober 2025)
+    function formatTanggal(input) {
+      if (!input) return "";
+      const d = new Date(input);
+      if (isNaN(d)) return input;
+      const options = { day: 'numeric', month: 'long', year: 'numeric' };
+      return d.toLocaleDateString('id-ID', options);
+    }
+
     function renderTable(data) {
       const table = document.createElement("table");
       const headerRow = document.createElement("tr");
@@ -184,16 +193,6 @@
       container.appendChild(table);
     }
 
-    function formatTanggal(input) {
-      if (!input) return "";
-      const d = new Date(input);
-      if (isNaN(d)) return input;
-      const day = String(d.getDate()).padStart(2, '0');
-      const month = String(d.getMonth() + 1).padStart(2, '0');
-      const year = d.getFullYear();
-      return `${day}/${month}/${year}`;
-    }
-
     function showPage(page) {
       const start = page * rowsPerPage;
       const end = start + rowsPerPage;
@@ -213,8 +212,7 @@
       if (!startDate || !endDate) return alert("Pilih tanggal awal dan akhir.");
 
       const filtered = allData.filter(row => {
-        const [day, month, year] = row.tanggal.split("/");
-        const tanggal = new Date(`${year}-${month}-${day}`);
+        const tanggal = new Date(row.tanggal);
         return tanggal >= new Date(startDate) && tanggal <= new Date(endDate);
       });
 
