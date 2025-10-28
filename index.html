@@ -1,8 +1,8 @@
 <!DOCTYPE html>
 <html lang="id">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>LAPORAN JAGA & JIMPITAN HARIAN RT 04 RW 01 LATSARI</title>
   <style>
     body {
@@ -70,6 +70,37 @@
     tr:hover {
       background-color: #2a2a2a;
     }
+    .pagination {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 6px;
+      margin-top: 20px;
+      flex-wrap: wrap;
+    }
+    .pagination button {
+      background: #00cc66;
+      color: #000;
+      font-weight: bold;
+      border: none;
+      border-radius: 6px;
+      padding: 6px 12px;
+      cursor: pointer;
+      transition: 0.2s;
+    }
+    .pagination button:hover {
+      background: #00ff88;
+    }
+    .pagination button.active {
+      background: #00ff88;
+      color: #000;
+      transform: scale(1.1);
+    }
+    .pagination button:disabled {
+      background: #333;
+      color: #777;
+      cursor: not-allowed;
+    }
     footer {
       text-align: center;
       font-size: 13px;
@@ -106,6 +137,8 @@
     </tbody>
   </table>
 
+  <div class="pagination" id="pagination"></div>
+
   <footer>Data otomatis diperbarui dari Google Sheet</footer>
 
   <script>
@@ -115,6 +148,9 @@
     const url = `https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?sheet=${sheetName}&tq=${query}`;
 
     let allData = [];
+    let filteredData = [];
+    let currentPage = 1;
+    const rowsPerPage = 10;
 
     fetch(url)
       .then(res => res.text())
@@ -150,27 +186,33 @@
           ket: r[7]
         }));
 
-        // tampilkan 10 terakhir
-        renderTable(allData.slice(-10).reverse());
+        // Urut dari data terbaru (bawah ke atas)
+        allData = allData.reverse();
+        filteredData = allData;
+        renderTable();
       })
       .catch(err => {
         document.getElementById("table-body").innerHTML =
           `<tr><td colspan="8">❌ Gagal memuat data: ${err.message}</td></tr>`;
       });
 
-    function renderTable(data) {
+    function renderTable() {
       const tbody = document.getElementById("table-body");
       tbody.innerHTML = "";
+      const start = (currentPage - 1) * rowsPerPage;
+      const end = start + rowsPerPage;
+      const dataToShow = filteredData.slice(start, end);
 
-      if (data.length === 0) {
+      if (dataToShow.length === 0) {
         tbody.innerHTML = `<tr><td colspan="8">Tidak ada data</td></tr>`;
+        document.getElementById("pagination").innerHTML = "";
         return;
       }
 
-      data.forEach(row => {
+      dataToShow.forEach((row, index) => {
         const tr = document.createElement("tr");
         tr.innerHTML = `
-          <td>${row.no}</td>
+          <td>${start + index + 1}</td>
           <td>${row.tanggal}</td>
           <td>${row.hari}</td>
           <td>${row.hadir}</td>
@@ -181,6 +223,34 @@
         `;
         tbody.appendChild(tr);
       });
+
+      renderPagination();
+    }
+
+    function renderPagination() {
+      const pagination = document.getElementById("pagination");
+      pagination.innerHTML = "";
+      const totalPages = Math.ceil(filteredData.length / rowsPerPage);
+
+      const prevBtn = document.createElement("button");
+      prevBtn.textContent = "⬅️";
+      prevBtn.disabled = currentPage === 1;
+      prevBtn.onclick = () => { currentPage--; renderTable(); };
+      pagination.appendChild(prevBtn);
+
+      for (let i = 1; i <= totalPages; i++) {
+        const pageBtn = document.createElement("button");
+        pageBtn.textContent = i;
+        if (i === currentPage) pageBtn.classList.add("active");
+        pageBtn.onclick = () => { currentPage = i; renderTable(); };
+        pagination.appendChild(pageBtn);
+      }
+
+      const nextBtn = document.createElement("button");
+      nextBtn.textContent = "➡️";
+      nextBtn.disabled = currentPage === totalPages;
+      nextBtn.onclick = () => { currentPage++; renderTable(); };
+      pagination.appendChild(nextBtn);
     }
 
     function applyFilter() {
@@ -190,22 +260,25 @@
         alert("Pilih tanggal awal dan akhir terlebih dahulu.");
         return;
       }
+
       const startDate = new Date(start);
       const endDate = new Date(end);
 
-      const filtered = allData.filter(row => {
-        const parts = row.tanggal.split(" ");
+      filteredData = allData.filter(row => {
         const tgl = new Date(row.tanggal);
         return tgl >= startDate && tgl <= endDate;
       });
 
-      renderTable(filtered);
+      currentPage = 1;
+      renderTable();
     }
 
     function resetFilter() {
       document.getElementById("startDate").value = "";
       document.getElementById("endDate").value = "";
-      renderTable(allData.slice(-10).reverse());
+      filteredData = allData;
+      currentPage = 1;
+      renderTable();
     }
   </script>
 </body>
