@@ -26,12 +26,22 @@
       flex-wrap: wrap;
       margin-bottom: 20px;
     }
-    .filter-container input {
+    .filter-container input, .filter-container button {
       background: #1a1a1a;
       border: 1px solid #444;
       color: #fff;
       padding: 6px 10px;
       border-radius: 6px;
+    }
+    .filter-container button {
+      background: #00cc66;
+      color: #000;
+      font-weight: bold;
+      cursor: pointer;
+      transition: 0.2s;
+    }
+    .filter-container button:hover {
+      background: #00ff88;
     }
     table {
       width: 100%;
@@ -51,13 +61,14 @@
       vertical-align: top;
       text-align: center;
     }
+    td.hasil {
+      min-width: 130px;
+      text-align: right;
+      font-weight: bold;
+      color: #00ff99;
+    }
     tr:nth-child(even) { background-color: #1c1c1c; }
     tr:hover { background-color: #222; }
-    img {
-      width: 80px;
-      border-radius: 10px;
-      box-shadow: 0 0 5px #000;
-    }
     footer {
       margin-top: 20px;
       text-align: center;
@@ -77,6 +88,10 @@
       margin: 4px;
       border-radius: 6px;
       cursor: pointer;
+      transition: 0.2s;
+    }
+    .pagination button:hover {
+      background: #00ff88;
     }
     .pagination button:disabled {
       background: #555;
@@ -92,6 +107,7 @@
     <label>Dari: <input type="date" id="startDate"></label>
     <label>Sampai: <input type="date" id="endDate"></label>
     <button onclick="applyFilter()">🔍 Filter</button>
+    <button onclick="resetFilter()">🔄 Reset</button>
   </div>
 
   <div id="table_div">Memuat data...</div>
@@ -105,7 +121,7 @@
   <script>
     const sheetID = "1g1fp70L86yFkZt6OcOQjdKK9kgtHmPb2TqLou7a-4Pw";
     const sheetName = "Laporan Jimpitan Harian";
-    const query = encodeURIComponent("select A,B,C,E,F,G,H,I,J");
+    const query = encodeURIComponent("select A,B,C,E,F,G,H,I");
     const url = `https://docs.google.com/spreadsheets/d/${sheetID}/gviz/tq?sheet=${sheetName}&tq=${query}`;
 
     let allData = [];
@@ -122,14 +138,13 @@
           const json = JSON.parse(rep.substr(47).slice(0, -2));
           allData = json.table.rows.slice(2).map((row, i) => ({
             no: i + 1,
-            tanggal: row.c[1]?.v || "",
+            tanggal: formatTanggal(row.c[1]?.v || ""),
             hari: row.c[2]?.v || "",
             hadir: row.c[3]?.v || "",
             izin: row.c[4]?.v || "",
             alpha: row.c[5]?.v || "",
             hasil: row.c[6]?.v || "",
-            keterangan: row.c[7]?.v || "",
-            foto: row.c[8]?.v || ""
+            keterangan: row.c[7]?.v || ""
           }));
           showPage(0);
         })
@@ -141,7 +156,7 @@
     function renderTable(data) {
       const table = document.createElement("table");
       const headerRow = document.createElement("tr");
-      const headers = ["No", "Tanggal", "Hari Jaga", "Hadir", "Izin", "Alpha", "Hasil (Rp)", "Keterangan", "Foto"];
+      const headers = ["No", "Tanggal", "Hari Jaga", "Hadir", "Izin", "Alpha", "Hasil (Rp)", "Keterangan"];
       headers.forEach(h => {
         const th = document.createElement("th");
         th.textContent = h;
@@ -158,9 +173,8 @@
           <td>${d.hadir}</td>
           <td>${d.izin}</td>
           <td>${d.alpha}</td>
-          <td>${d.hasil}</td>
+          <td class="hasil">${d.hasil}</td>
           <td style="text-align:left">${d.keterangan}</td>
-          <td>${d.foto ? `<img src="${formatDriveLink(d.foto)}" alt="foto">` : "-"}</td>
         `;
         table.appendChild(tr);
       });
@@ -170,10 +184,14 @@
       container.appendChild(table);
     }
 
-    function formatDriveLink(link) {
-      return link
-        .replace("https://drive.google.com/file/d/", "https://drive.google.com/uc?export=view&id=")
-        .replace("/view?usp=drive_link", "");
+    function formatTanggal(input) {
+      if (!input) return "";
+      const d = new Date(input);
+      if (isNaN(d)) return input;
+      const day = String(d.getDate()).padStart(2, '0');
+      const month = String(d.getMonth() + 1).padStart(2, '0');
+      const year = d.getFullYear();
+      return `${day}/${month}/${year}`;
     }
 
     function showPage(page) {
@@ -192,12 +210,11 @@
     function applyFilter() {
       const startDate = document.getElementById("startDate").value;
       const endDate = document.getElementById("endDate").value;
-
       if (!startDate || !endDate) return alert("Pilih tanggal awal dan akhir.");
 
       const filtered = allData.filter(row => {
-        const tanggalString = row.tanggal.toString();
-        const tanggal = new Date(tanggalString);
+        const [day, month, year] = row.tanggal.split("/");
+        const tanggal = new Date(`${year}-${month}-${day}`);
         return tanggal >= new Date(startDate) && tanggal <= new Date(endDate);
       });
 
@@ -208,6 +225,12 @@
 
       allData = filtered;
       showPage(0);
+    }
+
+    function resetFilter() {
+      document.getElementById("startDate").value = "";
+      document.getElementById("endDate").value = "";
+      loadData(); // reload semua data
     }
   </script>
 </body>
