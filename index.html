@@ -3,20 +3,19 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Laporan Jaga & Jimpitan Harian RT 04 RW 01 Latsari</title>
-  <script src="https://www.gstatic.com/charts/loader.js"></script>
+  <title>Laporan Jimpitan RT 04 RW 01 Latsari</title>
   <style>
     body {
+      font-family: 'Segoe UI', sans-serif;
       background-color: #0f0f0f;
       color: #f1f1f1;
-      font-family: 'Segoe UI', sans-serif;
       margin: 0;
       padding: 20px;
     }
     h1 {
       text-align: center;
       color: #00ff88;
-      margin-bottom: 10px;
+      margin-bottom: 15px;
     }
     .filter-container {
       display: flex;
@@ -46,56 +45,36 @@
     table {
       width: 100%;
       border-collapse: collapse;
+      background: #1a1a1a;
       border-radius: 10px;
       overflow: hidden;
+    }
+    th, td {
+      padding: 10px 12px;
+      text-align: center;
+      border-bottom: 1px solid #333;
     }
     th {
       background-color: #00cc66;
       color: #000;
-      padding: 10px;
-      text-align: center;
-    }
-    td {
-      padding: 10px;
-      border-bottom: 1px solid #333;
-      text-align: center;
     }
     td.hasil {
-      min-width: 130px;
       text-align: right;
-      font-weight: bold;
+      min-width: 130px;
       color: #00ff99;
-    }
-    tr:nth-child(even) { background-color: #1c1c1c; }
-    tr:hover { background-color: #222; }
-    footer {
-      margin-top: 20px;
-      text-align: center;
-      font-size: 12px;
-      color: #777;
-    }
-    .pagination {
-      text-align: center;
-      margin-top: 15px;
-    }
-    .pagination button {
-      background: #00cc66;
-      border: none;
-      color: #000;
       font-weight: bold;
-      padding: 6px 12px;
-      margin: 4px;
-      border-radius: 6px;
-      cursor: pointer;
-      transition: 0.2s;
     }
-    .pagination button:hover {
-      background: #00ff88;
+    tr:nth-child(even) {
+      background-color: #1e1e1e;
     }
-    .pagination button:disabled {
-      background: #555;
-      color: #999;
-      cursor: not-allowed;
+    tr:hover {
+      background-color: #2a2a2a;
+    }
+    footer {
+      text-align: center;
+      font-size: 13px;
+      color: #777;
+      margin-top: 25px;
     }
   </style>
 </head>
@@ -109,126 +88,116 @@
     <button onclick="resetFilter()">🔄 Reset</button>
   </div>
 
-  <div id="table_div">Memuat data...</div>
-  <div class="pagination">
-    <button id="prevBtn" onclick="prevPage()">⬅ Sebelumnya</button>
-    <button id="nextBtn" onclick="nextPage()">Berikutnya ➡</button>
-  </div>
+  <table>
+    <thead>
+      <tr>
+        <th>No</th>
+        <th>Tanggal</th>
+        <th>Hari Jaga</th>
+        <th>Hadir</th>
+        <th>Izin</th>
+        <th>Alpha</th>
+        <th>Hasil (Rp)</th>
+        <th>Keterangan</th>
+      </tr>
+    </thead>
+    <tbody id="table-body">
+      <tr><td colspan="8">⏳ Memuat data...</td></tr>
+    </tbody>
+  </table>
 
-  <footer>Terhubung otomatis dengan Google Sheet</footer>
+  <footer>Data otomatis diperbarui dari Google Sheet</footer>
 
   <script>
-    const sheetID = "1g1fp70L86yFkZt6OcOQjdKK9kgtHmPb2TqLou7a-4Pw";
+    const sheetId = "1g1fp70L86yFkZt6OcOQjdKK9kgtHmPb2TqLou7a-4Pw";
     const sheetName = "Laporan Jimpitan Harian";
-    const query = encodeURIComponent("select *");
-    const url = `https://docs.google.com/spreadsheets/d/${sheetID}/gviz/tq?sheet=${sheetName}&tq=${query}`;
+    const query = encodeURIComponent("SELECT A,B,C,E,F,G,H,I");
+    const url = `https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?sheet=${sheetName}&tq=${query}`;
 
     let allData = [];
-    let currentPage = 0;
-    const rowsPerPage = 10;
 
-    google.charts.load('current', {'packages':['table']});
-    google.charts.setOnLoadCallback(loadData);
+    fetch(url)
+      .then(res => res.text())
+      .then(rep => {
+        const json = JSON.parse(rep.substr(47).slice(0, -2));
+        const rows = json.table.rows.map(r => r.c.map(c => (c ? c.v : "")));
 
-    function loadData() {
-      fetch(url)
-        .then(res => res.text())
-        .then(rep => {
-          const json = JSON.parse(rep.substr(47).slice(0, -2));
-          const rows = json.table.rows.filter(r => r.c.some(c => c?.v));
-          allData = rows.slice(2).map((row, i) => ({
-            no: i + 1,
-            tanggal: formatTanggal(row.c[1]?.v),
-            hari: row.c[2]?.v || "",
-            hadir: row.c[4]?.v || "",
-            izin: row.c[5]?.v || "",
-            alpha: row.c[6]?.v || "",
-            hasil: formatRupiah(row.c[7]?.v || ""),
-            keterangan: row.c[8]?.v || ""
-          }));
-          showPage(0);
-        })
-        .catch(() => {
-          document.getElementById("table_div").innerHTML = "❌ Gagal memuat data. Pastikan sheet publik.";
-        });
-    }
+        const formatTanggal = (t) => {
+          if (typeof t === "string" && t.includes("Date(")) {
+            const match = t.match(/Date\((\d+),(\d+),(\d+)\)/);
+            if (match) {
+              const y = parseInt(match[1]);
+              const m = parseInt(match[2]);
+              const d = parseInt(match[3]);
+              return new Date(y, m, d).toLocaleDateString("id-ID", {
+                day: "numeric",
+                month: "long",
+                year: "numeric"
+              });
+            }
+          }
+          return t;
+        };
 
-    // ✅ FIX: Deteksi format tanggal angka atau teks
-    function formatTanggal(input) {
-      if (!input) return "";
-      if (typeof input === "number") {
-        const date = new Date(1899, 11, 30 + input);
-        return date.toLocaleDateString("id-ID", { day: "numeric", month: "long", year: "numeric" });
-      }
-      const d = new Date(input);
-      if (isNaN(d)) return input;
-      return d.toLocaleDateString("id-ID", { day: "numeric", month: "long", year: "numeric" });
-    }
+        allData = rows.map((r, i) => ({
+          no: i + 1,
+          tanggal: formatTanggal(r[1]),
+          hari: r[2],
+          hadir: r[3],
+          izin: r[4],
+          alpha: r[5],
+          hasil: r[6],
+          ket: r[7]
+        }));
 
-    function formatRupiah(angka) {
-      if (!angka) return "";
-      const num = parseInt(angka.toString().replace(/\D/g, "")) || 0;
-      return "Rp " + num.toLocaleString('id-ID');
-    }
+        // tampilkan 10 terakhir
+        renderTable(allData.slice(-10).reverse());
+      })
+      .catch(err => {
+        document.getElementById("table-body").innerHTML =
+          `<tr><td colspan="8">❌ Gagal memuat data: ${err.message}</td></tr>`;
+      });
 
     function renderTable(data) {
-      const table = document.createElement("table");
-      const headerRow = document.createElement("tr");
-      const headers = ["No", "Tanggal", "Hari Jaga", "Hadir", "Izin", "Alpha", "Hasil (Rp)", "Keterangan"];
-      headers.forEach(h => {
-        const th = document.createElement("th");
-        th.textContent = h;
-        headerRow.appendChild(th);
-      });
-      table.appendChild(headerRow);
+      const tbody = document.getElementById("table-body");
+      tbody.innerHTML = "";
 
-      data.forEach(d => {
-        const tr = document.createElement("tr");
-        tr.innerHTML = `
-          <td>${d.no}</td>
-          <td>${d.tanggal}</td>
-          <td>${d.hari}</td>
-          <td>${d.hadir}</td>
-          <td>${d.izin}</td>
-          <td>${d.alpha}</td>
-          <td class="hasil">${d.hasil}</td>
-          <td style="text-align:left">${d.keterangan}</td>
-        `;
-        table.appendChild(tr);
-      });
-
-      const container = document.getElementById("table_div");
-      container.innerHTML = "";
-      container.appendChild(table);
-    }
-
-    function showPage(page) {
-      const start = page * rowsPerPage;
-      const end = start + rowsPerPage;
-      const pageData = allData.slice(start, end);
-      renderTable(pageData);
-      currentPage = page;
-      document.getElementById("prevBtn").disabled = page === 0;
-      document.getElementById("nextBtn").disabled = end >= allData.length;
-    }
-
-    function nextPage() { showPage(currentPage + 1); }
-    function prevPage() { showPage(currentPage - 1); }
-
-    function applyFilter() {
-      const startDate = document.getElementById("startDate").value;
-      const endDate = document.getElementById("endDate").value;
-      if (!startDate || !endDate) return alert("Pilih tanggal awal dan akhir.");
-
-      const filtered = allData.filter(row => {
-        const tanggal = new Date(row.tanggal);
-        return tanggal >= new Date(startDate) && tanggal <= new Date(endDate);
-      });
-
-      if (filtered.length === 0) {
-        document.getElementById("table_div").innerHTML = "Tidak ada data pada rentang tanggal tersebut.";
+      if (data.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="8">Tidak ada data</td></tr>`;
         return;
       }
+
+      data.forEach(row => {
+        const tr = document.createElement("tr");
+        tr.innerHTML = `
+          <td>${row.no}</td>
+          <td>${row.tanggal}</td>
+          <td>${row.hari}</td>
+          <td>${row.hadir}</td>
+          <td>${row.izin}</td>
+          <td>${row.alpha}</td>
+          <td class="hasil">${row.hasil}</td>
+          <td style="text-align:left">${row.ket}</td>
+        `;
+        tbody.appendChild(tr);
+      });
+    }
+
+    function applyFilter() {
+      const start = document.getElementById("startDate").value;
+      const end = document.getElementById("endDate").value;
+      if (!start || !end) {
+        alert("Pilih tanggal awal dan akhir terlebih dahulu.");
+        return;
+      }
+      const startDate = new Date(start);
+      const endDate = new Date(end);
+
+      const filtered = allData.filter(row => {
+        const parts = row.tanggal.split(" ");
+        const tgl = new Date(row.tanggal);
+        return tgl >= startDate && tgl <= endDate;
+      });
 
       renderTable(filtered);
     }
@@ -236,7 +205,7 @@
     function resetFilter() {
       document.getElementById("startDate").value = "";
       document.getElementById("endDate").value = "";
-      loadData();
+      renderTable(allData.slice(-10).reverse());
     }
   </script>
 </body>
