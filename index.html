@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Laporan Jimpitan RT 04</title>
+  <script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
+  <style>
+    body {
+      background-color: #121212;
+      color: #fff;
+      font-family: 'Poppins', sans-serif;
+      margin: 0;
+      padding: 0;
+    }
+    h1 {
+      text-align: center;
+      color: #00c853;
+      padding: 20px 0;
+      font-weight: 600;
+    }
+    table {
+      width: 95%;
+      margin: 20px auto;
+      border-collapse: collapse;
+      background: #1e1e1e;
+      border-radius: 12px;
+      overflow: hidden;
+      box-shadow: 0 0 10px rgba(0,0,0,0.5);
+    }
+    th, td {
+      padding: 10px 14px;
+      text-align: center;
+      border-bottom: 1px solid #333;
+    }
+    th {
+      background: #00c853;
+      color: #000;
+      text-transform: uppercase;
+      font-weight: 700;
+    }
+    tr:hover {
+      background-color: #2a2a2a;
+    }
+    img {
+      width: 80px;
+      height: 80px;
+      border-radius: 8px;
+      object-fit: cover;
+    }
+    .footer {
+      text-align: center;
+      padding: 15px;
+      font-size: 13px;
+      color: #aaa;
+    }
+  </style>
+</head>
+<body>
+  <h1>📋 Laporan Jimpitan RT 04 RW 01 Latsari Tuban</h1>
+  <div id="table-container"></div>
+  <div class="footer">Terhubung otomatis dengan Google Sheet</div>
+
+  <script>
+    const sheetId = '1g1fp70L86yFkZt6OcOQjdKK9kgtHmPb2TqLou7a-4Pw';
+    const sheetName = 'Laporan Jimpitan Harian';
+    const query = encodeURIComponent('SELECT *');
+    const url = `https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?sheet=${sheetName}&tq=${query}`;
+
+    fetch(url)
+      .then(res => res.text())
+      .then(rep => {
+        const data = JSON.parse(rep.substr(47).slice(0, -2));
+        const table = document.createElement('table');
+
+        // header
+        const headerRow = document.createElement('tr');
+        data.table.cols.forEach(col => {
+          const th = document.createElement('th');
+          th.textContent = col.label;
+          headerRow.appendChild(th);
+        });
+        table.appendChild(headerRow);
+
+        // rows
+        data.table.rows.forEach(row => {
+          const tr = document.createElement('tr');
+          row.c.forEach((cell, i) => {
+            const td = document.createElement('td');
+            let val = cell?.v || '';
+            // Jika kolom FOTO
+            if (i === 9 && val) {
+              if (val.includes('drive.google.com')) {
+                // ubah ke format direct image
+                const fileId = val.match(/[-\w]{25,}/);
+                val = fileId ? `https://drive.google.com/uc?export=view&id=${fileId[0]}` : val;
+              }
+              td.innerHTML = `<img src="${val}" alt="foto" />`;
+            } else {
+              td.textContent = val;
+            }
+            tr.appendChild(td);
+          });
+          table.appendChild(tr);
+        });
+
+        document.getElementById('table-container').appendChild(table);
+      })
+      .catch(err => {
+        document.getElementById('table-container').innerHTML =
+          `<p style="color:red;text-align:center;">❌ Gagal memuat data. Pastikan sheet publik.</p>`;
+      });
+  </script>
+</body>
+</html>
