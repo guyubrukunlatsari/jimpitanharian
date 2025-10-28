@@ -7,15 +7,31 @@
   <script src="https://www.gstatic.com/charts/loader.js"></script>
   <style>
     body {
-      background-color: #111;
-      color: #fff;
+      background-color: #0f0f0f;
+      color: #f1f1f1;
       font-family: 'Segoe UI', sans-serif;
+      margin: 0;
       padding: 20px;
     }
     h1 {
       text-align: center;
-      color: #4cff8f;
-      margin-bottom: 30px;
+      color: #00ff88;
+      margin-bottom: 10px;
+    }
+    .filter-container {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: wrap;
+      margin-bottom: 20px;
+    }
+    .filter-container input {
+      background: #1a1a1a;
+      border: 1px solid #444;
+      color: #fff;
+      padding: 6px 10px;
+      border-radius: 6px;
     }
     table {
       width: 100%;
@@ -25,37 +41,65 @@
     }
     th {
       background-color: #00cc66;
-      padding: 12px;
-      text-align: center;
       color: #000;
+      padding: 10px;
+      text-align: center;
     }
     td {
-      padding: 12px;
+      padding: 10px;
       border-bottom: 1px solid #333;
       vertical-align: top;
+      text-align: center;
     }
-    tr:nth-child(even) {
-      background-color: #1c1c1c;
-    }
-    tr:hover {
-      background-color: #222;
-    }
+    tr:nth-child(even) { background-color: #1c1c1c; }
+    tr:hover { background-color: #222; }
     img {
-      width: 100px;
+      width: 80px;
       border-radius: 10px;
       box-shadow: 0 0 5px #000;
     }
     footer {
-      margin-top: 30px;
+      margin-top: 20px;
       text-align: center;
       font-size: 12px;
       color: #777;
+    }
+    .pagination {
+      text-align: center;
+      margin-top: 15px;
+    }
+    .pagination button {
+      background: #00cc66;
+      border: none;
+      color: #000;
+      font-weight: bold;
+      padding: 6px 12px;
+      margin: 4px;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+    .pagination button:disabled {
+      background: #555;
+      color: #999;
+      cursor: not-allowed;
     }
   </style>
 </head>
 <body>
   <h1>📋 Laporan Jimpitan RT 04 RW 01 Latsari Tuban</h1>
+
+  <div class="filter-container">
+    <label>Dari: <input type="date" id="startDate"></label>
+    <label>Sampai: <input type="date" id="endDate"></label>
+    <button onclick="applyFilter()">🔍 Filter</button>
+  </div>
+
   <div id="table_div">Memuat data...</div>
+  <div class="pagination">
+    <button id="prevBtn" onclick="prevPage()">⬅ Sebelumnya</button>
+    <button id="nextBtn" onclick="nextPage()">Berikutnya ➡</button>
+  </div>
+
   <footer>Terhubung otomatis dengan Google Sheet</footer>
 
   <script>
@@ -64,57 +108,106 @@
     const query = encodeURIComponent("select A,B,C,E,F,G,H,I,J");
     const url = `https://docs.google.com/spreadsheets/d/${sheetID}/gviz/tq?sheet=${sheetName}&tq=${query}`;
 
-    google.charts.load('current', {'packages':['table']});
-    google.charts.setOnLoadCallback(drawTable);
+    let allData = [];
+    let currentPage = 0;
+    const rowsPerPage = 10;
 
-    function drawTable() {
+    google.charts.load('current', {'packages':['table']});
+    google.charts.setOnLoadCallback(loadData);
+
+    function loadData() {
       fetch(url)
         .then(res => res.text())
         .then(rep => {
           const json = JSON.parse(rep.substr(47).slice(0, -2));
-          const table = document.createElement("table");
-          const headerRow = document.createElement("tr");
-
-          const headers = ["No", "Tanggal", "Hari Jaga", "Hadir", "Izin", "Alpha", "Hasil (Rp)", "Keterangan", "Foto"];
-          headers.forEach(h => {
-            const th = document.createElement("th");
-            th.textContent = h;
-            headerRow.appendChild(th);
-          });
-          table.appendChild(headerRow);
-
-          json.table.rows.slice(2).forEach((row, i) => {
-            const tr = document.createElement("tr");
-
-            // Kolom No
-            const tdNo = document.createElement("td");
-            tdNo.textContent = i + 1;
-            tr.appendChild(tdNo);
-
-            // Kolom lain
-            row.c.slice(1).forEach((cell, idx) => {
-              const td = document.createElement("td");
-              if (idx === 8 && cell && cell.v) {
-                // Kolom FOTO → tampilkan gambar
-                const link = cell.v.replace("https://drive.google.com/file/d/", "https://drive.google.com/uc?export=view&id=").replace("/view?usp=drive_link", "");
-                const img = document.createElement("img");
-                img.src = link;
-                td.appendChild(img);
-              } else {
-                td.textContent = cell ? cell.v : "";
-              }
-              tr.appendChild(td);
-            });
-
-            table.appendChild(tr);
-          });
-
-          document.getElementById("table_div").innerHTML = "";
-          document.getElementById("table_div").appendChild(table);
+          allData = json.table.rows.slice(2).map((row, i) => ({
+            no: i + 1,
+            tanggal: row.c[1]?.v || "",
+            hari: row.c[2]?.v || "",
+            hadir: row.c[3]?.v || "",
+            izin: row.c[4]?.v || "",
+            alpha: row.c[5]?.v || "",
+            hasil: row.c[6]?.v || "",
+            keterangan: row.c[7]?.v || "",
+            foto: row.c[8]?.v || ""
+          }));
+          showPage(0);
         })
-        .catch(err => {
+        .catch(() => {
           document.getElementById("table_div").innerHTML = "❌ Gagal memuat data. Pastikan sheet publik.";
         });
+    }
+
+    function renderTable(data) {
+      const table = document.createElement("table");
+      const headerRow = document.createElement("tr");
+      const headers = ["No", "Tanggal", "Hari Jaga", "Hadir", "Izin", "Alpha", "Hasil (Rp)", "Keterangan", "Foto"];
+      headers.forEach(h => {
+        const th = document.createElement("th");
+        th.textContent = h;
+        headerRow.appendChild(th);
+      });
+      table.appendChild(headerRow);
+
+      data.forEach(d => {
+        const tr = document.createElement("tr");
+        tr.innerHTML = `
+          <td>${d.no}</td>
+          <td>${d.tanggal}</td>
+          <td>${d.hari}</td>
+          <td>${d.hadir}</td>
+          <td>${d.izin}</td>
+          <td>${d.alpha}</td>
+          <td>${d.hasil}</td>
+          <td style="text-align:left">${d.keterangan}</td>
+          <td>${d.foto ? `<img src="${formatDriveLink(d.foto)}" alt="foto">` : "-"}</td>
+        `;
+        table.appendChild(tr);
+      });
+
+      const container = document.getElementById("table_div");
+      container.innerHTML = "";
+      container.appendChild(table);
+    }
+
+    function formatDriveLink(link) {
+      return link
+        .replace("https://drive.google.com/file/d/", "https://drive.google.com/uc?export=view&id=")
+        .replace("/view?usp=drive_link", "");
+    }
+
+    function showPage(page) {
+      const start = page * rowsPerPage;
+      const end = start + rowsPerPage;
+      const pageData = allData.slice(start, end);
+      renderTable(pageData);
+      currentPage = page;
+      document.getElementById("prevBtn").disabled = page === 0;
+      document.getElementById("nextBtn").disabled = end >= allData.length;
+    }
+
+    function nextPage() { showPage(currentPage + 1); }
+    function prevPage() { showPage(currentPage - 1); }
+
+    function applyFilter() {
+      const startDate = document.getElementById("startDate").value;
+      const endDate = document.getElementById("endDate").value;
+
+      if (!startDate || !endDate) return alert("Pilih tanggal awal dan akhir.");
+
+      const filtered = allData.filter(row => {
+        const tanggalString = row.tanggal.toString();
+        const tanggal = new Date(tanggalString);
+        return tanggal >= new Date(startDate) && tanggal <= new Date(endDate);
+      });
+
+      if (filtered.length === 0) {
+        document.getElementById("table_div").innerHTML = "Tidak ada data pada rentang tanggal tersebut.";
+        return;
+      }
+
+      allData = filtered;
+      showPage(0);
     }
   </script>
 </body>
