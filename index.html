@@ -42,9 +42,8 @@
     .filter-container button:hover {
       background: #00ff88;
     }
-    #searchBox {
-      width: 250px;
-    }
+    #searchBox { width: 200px; }
+    #startDate, #endDate { width: 140px; }
     table {
       width: 100%;
       border-collapse: collapse;
@@ -57,68 +56,28 @@
       text-align: center;
       border-bottom: 1px solid #333;
     }
-    th {
-      background-color: #00cc66;
-      color: #000;
-    }
-    td.hasil {
-      text-align: right;
-      min-width: 130px;
-      color: #00ff99;
-      font-weight: bold;
-    }
+    th { background-color: #00cc66; color: #000; }
+    td.hasil { text-align: right; min-width: 130px; color: #00ff99; font-weight: bold; }
     tr:nth-child(even) { background-color: #1e1e1e; }
     tr:hover { background-color: #2a2a2a; }
-    .highlight {
-      background-color: #00ff44;
-      color: #000;
-      font-weight: bold;
-      border-radius: 3px;
-      padding: 0 2px;
-    }
-    .pagination {
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      gap: 6px;
-      margin-top: 20px;
-      flex-wrap: wrap;
-    }
-    .pagination button {
-      background: #00cc66;
-      color: #000;
-      font-weight: bold;
-      border: none;
-      border-radius: 6px;
-      padding: 6px 12px;
-      cursor: pointer;
-      transition: 0.2s;
-    }
+    .highlight { background-color: #00ff44; color: #000; font-weight: bold; border-radius: 3px; padding: 0 2px; }
+    .pagination { display: flex; justify-content: center; align-items: center; gap: 6px; margin-top: 20px; flex-wrap: wrap; }
+    .pagination button { background: #00cc66; color: #000; font-weight: bold; border: none; border-radius: 6px; padding: 6px 12px; cursor: pointer; transition: 0.2s; }
     .pagination button:hover { background: #00ff88; }
-    .pagination button.active {
-      background: #00ff88;
-      color: #000;
-      transform: scale(1.1);
-    }
-    .pagination button:disabled {
-      background: #333;
-      color: #777;
-      cursor: not-allowed;
-    }
-    footer {
-      text-align: center;
-      font-size: 13px;
-      color: #777;
-      margin-top: 25px;
-    }
+    .pagination button.active { background: #00ff88; color: #000; transform: scale(1.1); }
+    .pagination button:disabled { background: #333; color: #777; cursor: not-allowed; }
+    footer { text-align: center; font-size: 13px; color: #777; margin-top: 25px; }
   </style>
 </head>
 <body>
   <h1>LAPORAN JAGA & JIMPITAN HARIAN RT 04 RW 01 LATSARI</h1>
 
   <div class="filter-container">
+    <label>Dari: <input type="date" id="startDate"></label>
+    <label>Sampai: <input type="date" id="endDate"></label>
     <input type="text" id="searchBox" placeholder="🔎 Cari semua kolom..." />
     <button onclick="resetFilter()">🔄 Reset</button>
+    <button onclick="exportPDF()">📄 Export PDF</button>
   </div>
 
   <table>
@@ -142,6 +101,9 @@
   <div class="pagination" id="pagination"></div>
 
   <footer>Data otomatis diperbarui dari Google Sheet</footer>
+
+  <!-- jsPDF dari CDN -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 
   <script>
     const sheetId = "1g1fp70L86yFkZt6OcOQjdKK9kgtHmPb2TqLou7a-4Pw";
@@ -167,32 +129,16 @@
             const m = val.match(/Date\((\d+),(\d+),(\d+)/);
             if (m) {
               const d = new Date(m[1], m[2], m[3]);
-              return {
-                text: d.toLocaleDateString("id-ID", { day: "2-digit", month: "2-digit", year: "numeric" }),
-                raw: d
-              };
+              return { text: d.toLocaleDateString("id-ID", { day: "2-digit", month: "2-digit", year: "numeric" }), raw: d };
             }
           }
           const d = new Date(val);
-          return {
-            text: !isNaN(d) ? d.toLocaleDateString("id-ID", { day: "2-digit", month: "2-digit", year: "numeric" }) : val,
-            raw: !isNaN(d) ? d : new Date("1970-01-01")
-          };
+          return { text: !isNaN(d) ? d.toLocaleDateString("id-ID", { day: "2-digit", month: "2-digit", year: "numeric" }) : val, raw: !isNaN(d) ? d : new Date("1970-01-01") };
         };
 
         allData = rows.map((r, i) => {
           const tgl = parseGoogleDate(r[1]);
-          return {
-            no: i + 1,
-            tanggalText: tgl.text,
-            tanggalObj: tgl.raw,
-            hari: r[2],
-            hadir: r[3],
-            izin: r[4],
-            alpha: r[5],
-            hasil: r[6],
-            ket: r[7]
-          };
+          return { no: i+1, tanggalText: tgl.text, tanggalObj: tgl.raw, hari: r[2], hadir: r[3], izin: r[4], alpha: r[5], hasil: r[6], ket: r[7] };
         });
 
         allData = allData.reverse();
@@ -210,30 +156,44 @@
       return text.replace(regex, '<span class="highlight">$1</span>');
     }
 
+    function applyFilter() {
+      const startDateVal = document.getElementById("startDate").value;
+      const endDateVal = document.getElementById("endDate").value;
+      let startDate = startDateVal ? new Date(startDateVal) : null;
+      let endDate = endDateVal ? new Date(endDateVal) : null;
+
+      filteredData = allData.filter(row => {
+        let matchDate = true;
+        if (startDate && endDate) matchDate = row.tanggalObj >= startDate && row.tanggalObj <= endDate;
+        let matchText = currentKeyword ? Object.values(row).some(val => String(val).toLowerCase().includes(currentKeyword)) : true;
+        return matchDate && matchText;
+      });
+
+      currentPage = 1;
+      renderTable();
+    }
+
     function renderTable() {
+      applyFilter();
       const tbody = document.getElementById("table-body");
       tbody.innerHTML = "";
       const start = (currentPage - 1) * rowsPerPage;
       const end = start + rowsPerPage;
       const dataToShow = filteredData.slice(start, end);
 
-      if (dataToShow.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="8">Tidak ada data</td></tr>`;
-        document.getElementById("pagination").innerHTML = "";
-        return;
-      }
+      if (dataToShow.length === 0) { tbody.innerHTML = `<tr><td colspan="8">Tidak ada data</td></tr>`; document.getElementById("pagination").innerHTML = ""; return; }
 
-      dataToShow.forEach((row, index) => {
-        const tr = document.createElement("tr");
-        tr.innerHTML = `
-          <td>${start + index + 1}</td>
-          <td>${highlightText(row.tanggalText, currentKeyword)}</td>
-          <td>${highlightText(row.hari, currentKeyword)}</td>
-          <td>${highlightText(row.hadir, currentKeyword)}</td>
-          <td>${highlightText(row.izin, currentKeyword)}</td>
-          <td>${highlightText(row.alpha, currentKeyword)}</td>
-          <td class="hasil">${highlightText(row.hasil, currentKeyword)}</td>
-          <td style="text-align:left">${highlightText(row.ket, currentKeyword)}</td>
+      dataToShow.forEach((row,index)=>{
+        const tr=document.createElement("tr");
+        tr.innerHTML=`
+          <td>${start+index+1}</td>
+          <td>${highlightText(row.tanggalText,currentKeyword)}</td>
+          <td>${highlightText(row.hari,currentKeyword)}</td>
+          <td>${highlightText(row.hadir,currentKeyword)}</td>
+          <td>${highlightText(row.izin,currentKeyword)}</td>
+          <td>${highlightText(row.alpha,currentKeyword)}</td>
+          <td class="hasil">${highlightText(row.hasil,currentKeyword)}</td>
+          <td style="text-align:left">${highlightText(row.ket,currentKeyword)}</td>
         `;
         tbody.appendChild(tr);
       });
@@ -242,49 +202,59 @@
     }
 
     function renderPagination() {
-      const pagination = document.getElementById("pagination");
-      pagination.innerHTML = "";
-      const totalPages = Math.ceil(filteredData.length / rowsPerPage);
-      if (totalPages <= 1) return;
+      const pagination=document.getElementById("pagination");
+      pagination.innerHTML="";
+      const totalPages=Math.ceil(filteredData.length/rowsPerPage);
+      if(totalPages<=1) return;
 
-      const prevBtn = document.createElement("button");
-      prevBtn.textContent = "⬅️";
-      prevBtn.disabled = currentPage === 1;
-      prevBtn.onclick = () => { currentPage--; renderTable(); };
+      const prevBtn=document.createElement("button");
+      prevBtn.textContent="⬅️"; prevBtn.disabled=currentPage===1; prevBtn.onclick=()=>{currentPage--; renderTable();};
       pagination.appendChild(prevBtn);
 
-      for (let i = 1; i <= totalPages; i++) {
-        const pageBtn = document.createElement("button");
-        pageBtn.textContent = i;
-        if (i === currentPage) pageBtn.classList.add("active");
-        pageBtn.onclick = () => { currentPage = i; renderTable(); };
+      for(let i=1;i<=totalPages;i++){
+        const pageBtn=document.createElement("button");
+        pageBtn.textContent=i;
+        if(i===currentPage) pageBtn.classList.add("active");
+        pageBtn.onclick=()=>{currentPage=i; renderTable();};
         pagination.appendChild(pageBtn);
       }
 
-      const nextBtn = document.createElement("button");
-      nextBtn.textContent = "➡️";
-      nextBtn.disabled = currentPage === totalPages;
-      nextBtn.onclick = () => { currentPage++; renderTable(); };
+      const nextBtn=document.createElement("button");
+      nextBtn.textContent="➡️"; nextBtn.disabled=currentPage===totalPages; nextBtn.onclick=()=>{currentPage++; renderTable();};
       pagination.appendChild(nextBtn);
     }
 
-    // Pencarian otomatis + highlight
-    document.getElementById("searchBox").addEventListener("input", () => {
-      currentKeyword = document.getElementById("searchBox").value.toLowerCase();
-      filteredData = allData.filter(row => 
-        Object.values(row).some(val => String(val).toLowerCase().includes(currentKeyword))
-      );
-      currentPage = 1;
-      renderTable();
+    document.getElementById("searchBox").addEventListener("input",()=>{
+      currentKeyword=document.getElementById("searchBox").value.toLowerCase();
+      currentPage=1; renderTable();
     });
 
-    function resetFilter() {
-      document.getElementById("searchBox").value = "";
-      currentKeyword = "";
-      filteredData = allData;
-      currentPage = 1;
+    document.getElementById("startDate").addEventListener("change",()=>{currentPage=1; renderTable();});
+    document.getElementById("endDate").addEventListener("change",()=>{currentPage=1; renderTable();});
+
+    function resetFilter(){
+      document.getElementById("searchBox").value="";
+      document.getElementById("startDate").value="";
+      document.getElementById("endDate").value="";
+      currentKeyword="";
+      filteredData=allData;
+      currentPage=1;
       renderTable();
     }
-  </script>
-</body>
-</html>
+
+    async function exportPDF() {
+      const { jsPDF } = window.jspdf;
+      const doc = new jsPDF();
+      doc.setFontSize(10);
+      let y = 10;
+      doc.text("LAPORAN JAGA & JIMPITAN HARIAN RT 04 RW 01 LATSARI", 10, y);
+      y += 10;
+
+      // Header
+      const headers = ["No","Tanggal","Hari Jaga","Hadir","Izin","Alpha","Hasil (Rp)","Keterangan"];
+      doc.setFont(undefined, 'bold');
+      headers.forEach((h,i)=>doc.text(h, 10+i*25, y));
+      doc.setFont(undefined,'normal');
+      y += 6;
+
+      //
