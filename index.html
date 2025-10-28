@@ -1,114 +1,73 @@
 <!DOCTYPE html>
 <html lang="id">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Laporan Jaga & Jimpitan Harian RT</title>
-
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>LAPORAN JAGA & JIMPITAN HARIAN RT</title>
   <style>
     body {
-      background-color: #0d1117;
-      color: #e6edf3;
-      font-family: "Segoe UI", sans-serif;
-      margin: 20px;
+      font-family: Arial, sans-serif;
+      background-color: #121212;
+      color: white;
+      margin: 0;
+      padding: 20px;
     }
-
     h1 {
       text-align: center;
-      color: #58a6ff;
-      margin-bottom: 20px;
+      color: #00c853;
     }
-
-    .filter-container {
-      display: flex;
-      flex-wrap: wrap;
-      justify-content: center;
-      align-items: center;
-      gap: 10px;
-      margin-bottom: 15px;
-    }
-
-    input[type="date"], input[type="text"] {
-      padding: 6px;
-      border-radius: 5px;
-      border: 1px solid #30363d;
-      background-color: #161b22;
-      color: #e6edf3;
-    }
-
-    button {
-      padding: 6px 12px;
-      border: none;
-      border-radius: 5px;
-      background-color: #238636;
-      color: white;
-      cursor: pointer;
-    }
-
-    button:hover {
-      background-color: #2ea043;
-    }
-
-    .export-buttons {
-      display: flex;
-      justify-content: center;
-      gap: 10px;
-      margin-top: 10px;
-    }
-
     table {
       width: 100%;
       border-collapse: collapse;
-      margin-top: 15px;
-      background-color: #161b22;
+      margin-top: 10px;
     }
-
     th, td {
-      border: 1px solid #30363d;
-      padding: 8px 10px;
+      border: 1px solid #333;
+      padding: 8px;
       text-align: center;
     }
-
     th {
-      background-color: #21262d;
-      color: #58a6ff;
-      position: sticky;
-      top: 0;
-      z-index: 1;
+      background-color: #1e1e1e;
     }
-
     tr:nth-child(even) {
-      background-color: #1c2128;
+      background-color: #1a1a1a;
     }
-
-    tr:hover {
-      background-color: #2d333b;
+    .filter-box {
+      display: flex;
+      justify-content: center;
+      gap: 10px;
+      margin-bottom: 15px;
+      flex-wrap: wrap;
     }
-
-    @media (max-width: 768px) {
-      table { font-size: 14px; }
+    input[type="date"] {
+      background: #1e1e1e;
+      color: white;
+      border: 1px solid #444;
+      padding: 5px;
+      border-radius: 4px;
+    }
+    button {
+      background-color: #00c853;
+      border: none;
+      padding: 6px 12px;
+      color: white;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+    button:hover {
+      background-color: #00e676;
     }
   </style>
 </head>
 <body>
-  <h1>📋 Laporan Jaga & Jimpitan Harian RT 04 RW 01 Latsari</h1>
-
-  <!-- Filter -->
-  <div class="filter-container">
-    <label>Dari:</label>
-    <input type="date" id="startDate" />
-    <label>Sampai:</label>
-    <input type="date" id="endDate" />
-    <button onclick="filterTanggal()">Filter</button>
+  <h1>LAPORAN JAGA & JIMPITAN HARIAN RT</h1>
+  <div class="filter-box">
+    <label>Dari: <input type="date" id="startDate"></label>
+    <label>Sampai: <input type="date" id="endDate"></label>
+    <button onclick="applyFilter()">Filter</button>
     <button onclick="resetFilter()">Reset</button>
   </div>
 
-  <!-- Search -->
-  <div class="filter-container">
-    <input type="text" id="searchInput" placeholder="🔍 Cari hari jaga, hadir, atau keterangan..." onkeyup="cariData()">
-  </div>
-
-  <!-- Table -->
   <table id="dataTable">
     <thead>
       <tr>
@@ -122,123 +81,107 @@
         <th>KETERANGAN</th>
       </tr>
     </thead>
-    <tbody id="tableBody"></tbody>
+    <tbody id="dataBody">
+      <!-- Data akan dimasukkan di sini -->
+    </tbody>
   </table>
 
-  <!-- Export buttons -->
-  <div class="export-buttons">
-    <button onclick="downloadExcel()">📊 Unduh Excel</button>
-    <button onclick="downloadPDF()">📄 Unduh PDF</button>
-  </div>
-
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.19.2/xlsx.full.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.23/jspdf.plugin.autotable.min.js"></script>
-
   <script>
-    const sheetUrl = "https://opensheet.elk.sh/1g1fp70L86yFkZt6OcOQjdKK9kgtHmPb2TqLou7a-4Pw/View";
-    let semuaData = [];
+    const sheetUrl = 'https://docs.google.com/spreadsheets/d/1g1fp70L86yFkZt6OcOQjdKK9kgtHmPb2TqLou7a-4Pw/gviz/tq?tqx=out:json&sheet=View';
 
     fetch(sheetUrl)
-      .then(res => res.json())
-      .then(data => {
-        semuaData = data;
-        tampilkanData(data);
+      .then(res => res.text())
+      .then(rep => {
+        const data = JSON.parse(rep.substr(47).slice(0, -2));
+        const tableData = data.table.rows.map(r => r.c.map(c => (c ? c.v : "")));
+        displayData(tableData);
       })
-      .catch(err => console.error("Gagal ambil data:", err));
-
-    function tampilkanData(data) {
-      const tbody = document.getElementById("tableBody");
-      tbody.innerHTML = "";
-      const lastData = data.slice(-10).reverse();
-
-      lastData.forEach((row, index) => {
-        const tr = document.createElement("tr");
-        tr.innerHTML = `
-          <td>${index + 1}</td>
-          <td>${row["TANGGAL"] || ""}</td>
-          <td>${row["HARI JAGA"] || ""}</td>
-          <td>${row["HADIR"] || ""}</td>
-          <td>${row["IZIN"] || ""}</td>
-          <td>${row["ALPHA"] || ""}</td>
-          <td>${row["HASIL (Rp)"] || ""}</td>
-          <td>${row["KETERANGAN"] || ""}</td>
-        `;
-        tbody.appendChild(tr);
+      .catch(err => {
+        document.getElementById("dataBody").innerHTML = `<tr><td colspan="8">Gagal memuat data: ${err}</td></tr>`;
       });
-    }
 
     function parseDateIndo(dateStr) {
       if (!dateStr) return null;
-      dateStr = dateStr.replace(/^[A-Za-z]+,\s*/, "").trim();
+      dateStr = dateStr.toString().trim();
+
+      // Hilangkan nama hari dan koma
+      dateStr = dateStr.replace(/^[A-Za-zÀ-ÿ]+,\s*/, "").replace(",", "").trim();
+
       const bulan = {
         januari: 0, februari: 1, maret: 2, april: 3, mei: 4, juni: 5,
         juli: 6, agustus: 7, september: 8, oktober: 9, november: 10, desember: 11
       };
+
+      // Jika format 21/10/2025
       if (dateStr.includes("/")) {
         const [d, m, y] = dateStr.split("/").map(Number);
         return new Date(y, m - 1, d);
       }
+
+      // Jika format 27 Oktober 2025
       const parts = dateStr.split(" ");
-      const d = parseInt(parts[0]);
-      const m = bulan[parts[1]?.toLowerCase()];
-      const y = parseInt(parts[2]);
-      if (isNaN(d) || isNaN(m) || isNaN(y)) return null;
-      return new Date(y, m, d);
+      if (parts.length >= 3) {
+        const d = parseInt(parts[0]);
+        const m = bulan[parts[1]?.toLowerCase()];
+        const y = parseInt(parts[2]);
+        if (!isNaN(d) && !isNaN(m) && !isNaN(y)) return new Date(y, m, d);
+      }
+
+      // Jika format ISO (2025-10-21)
+      const isoDate = new Date(dateStr);
+      if (!isNaN(isoDate)) return isoDate;
+
+      return null;
     }
 
-    function filterTanggal() {
-      const start = document.getElementById("startDate").value;
-      const end = document.getElementById("endDate").value;
-      const rows = document.querySelectorAll("#dataTable tbody tr");
-      rows.forEach(row => {
-        const tglStr = row.cells[1].textContent.trim();
-        const tgl = parseDateIndo(tglStr);
-        if (!tgl) return (row.style.display = "none");
-        const startDate = start ? new Date(start) : null;
-        const endDate = end ? new Date(end) : null;
-        if ((!startDate || tgl >= startDate) && (!endDate || tgl <= endDate)) {
-          row.style.display = "";
-        } else {
-          row.style.display = "none";
-        }
+    let allData = [];
+
+    function displayData(rows) {
+      allData = rows.slice(1); // Hilangkan header
+      renderTable(allData);
+    }
+
+    function renderTable(data) {
+      const body = document.getElementById('dataBody');
+      body.innerHTML = '';
+      if (!data.length) {
+        body.innerHTML = '<tr><td colspan="8">Tidak ada data.</td></tr>';
+        return;
+      }
+      data.forEach((row, i) => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td>${i + 1}</td>
+          <td>${row[1]}</td>
+          <td>${row[2]}</td>
+          <td>${row[4]}</td>
+          <td>${row[5]}</td>
+          <td>${row[6]}</td>
+          <td>${row[7]}</td>
+          <td>${row[8]}</td>
+        `;
+        body.appendChild(tr);
       });
+    }
+
+    function applyFilter() {
+      const start = document.getElementById('startDate').value ? new Date(document.getElementById('startDate').value) : null;
+      const end = document.getElementById('endDate').value ? new Date(document.getElementById('endDate').value) : null;
+
+      const filtered = allData.filter(row => {
+        const d = parseDateIndo(row[1]);
+        if (!d) return false;
+        if (start && d < start) return false;
+        if (end && d > end) return false;
+        return true;
+      });
+      renderTable(filtered);
     }
 
     function resetFilter() {
-      document.getElementById("startDate").value = "";
-      document.getElementById("endDate").value = "";
-      document.getElementById("searchInput").value = "";
-      tampilkanData(semuaData);
-    }
-
-    function cariData() {
-      const input = document.getElementById("searchInput").value.toLowerCase();
-      const rows = document.querySelectorAll("#dataTable tbody tr");
-      rows.forEach(row => {
-        const rowText = row.textContent.toLowerCase();
-        row.style.display = rowText.includes(input) ? "" : "none";
-      });
-    }
-
-    function downloadExcel() {
-      const wb = XLSX.utils.table_to_book(document.getElementById("dataTable"));
-      XLSX.writeFile(wb, "Laporan_Jimpitan_RT04.xlsx");
-    }
-
-    async function downloadPDF() {
-      const { jsPDF } = window.jspdf;
-      const doc = new jsPDF("l", "pt", "a4");
-
-      doc.text("LAPORAN JAGA & JIMPITAN HARIAN RT 04 RW 01 LATSARI", 40, 40);
-      doc.autoTable({
-        html: "#dataTable",
-        startY: 60,
-        styles: { fontSize: 8 },
-        headStyles: { fillColor: [88, 166, 255] },
-      });
-
-      doc.save("Laporan_Jimpitan_RT04.pdf");
+      document.getElementById('startDate').value = '';
+      document.getElementById('endDate').value = '';
+      renderTable(allData);
     }
   </script>
 </body>
