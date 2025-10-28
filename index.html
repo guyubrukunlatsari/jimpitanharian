@@ -3,197 +3,174 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>LAPORAN JAGA & JIMPITAN HARIAN RT 04 RW 01 LATSARI</title>
+  <title>Laporan Jaga & Jimpitan Harian RT</title>
+
   <style>
     body {
-      font-family: 'Segoe UI', sans-serif;
-      background-color: #0f0f0f;
-      color: #f1f1f1;
-      margin: 0;
-      padding: 20px;
+      background-color: #0d1117;
+      color: #e6edf3;
+      font-family: "Segoe UI", sans-serif;
+      margin: 20px;
     }
+
     h1 {
       text-align: center;
-      color: #00ff88;
-      margin-bottom: 15px;
+      color: #58a6ff;
+      margin-bottom: 20px;
     }
+
     .filter-container {
       display: flex;
+      flex-wrap: wrap;
       justify-content: center;
       align-items: center;
       gap: 10px;
-      flex-wrap: wrap;
-      margin-bottom: 20px;
+      margin-bottom: 15px;
     }
-    .filter-container input, .filter-container button {
-      background: #1a1a1a;
-      border: 1px solid #444;
-      color: #fff;
-      padding: 6px 10px;
-      border-radius: 6px;
+
+    input[type="date"], input[type="text"] {
+      padding: 6px;
+      border-radius: 5px;
+      border: 1px solid #30363d;
+      background-color: #161b22;
+      color: #e6edf3;
     }
-    .filter-container button {
-      background: #00cc66;
-      color: #000;
-      font-weight: bold;
+
+    button {
+      padding: 6px 12px;
+      border: none;
+      border-radius: 5px;
+      background-color: #238636;
+      color: white;
       cursor: pointer;
-      transition: 0.2s;
     }
-    .filter-container button:hover {
-      background: #00ff88;
+
+    button:hover {
+      background-color: #2ea043;
     }
+
+    .export-buttons {
+      display: flex;
+      justify-content: center;
+      gap: 10px;
+      margin-top: 10px;
+    }
+
     table {
       width: 100%;
       border-collapse: collapse;
-      background: #1a1a1a;
-      border-radius: 10px;
-      overflow: hidden;
+      margin-top: 15px;
+      background-color: #161b22;
     }
+
     th, td {
-      padding: 10px 12px;
+      border: 1px solid #30363d;
+      padding: 8px 10px;
       text-align: center;
-      border-bottom: 1px solid #333;
     }
+
     th {
-      background-color: #00cc66;
-      color: #000;
+      background-color: #21262d;
+      color: #58a6ff;
+      position: sticky;
+      top: 0;
+      z-index: 1;
     }
-    td.hasil {
-      text-align: right;
-      min-width: 130px;
-      color: #00ff99;
-      font-weight: bold;
-    }
+
     tr:nth-child(even) {
-      background-color: #1e1e1e;
+      background-color: #1c2128;
     }
+
     tr:hover {
-      background-color: #2a2a2a;
+      background-color: #2d333b;
     }
-    .pagination {
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      gap: 6px;
-      margin-top: 20px;
-      flex-wrap: wrap;
-    }
-    .pagination button {
-      background: #00cc66;
-      color: #000;
-      font-weight: bold;
-      border: none;
-      border-radius: 6px;
-      padding: 6px 12px;
-      cursor: pointer;
-      transition: 0.2s;
-    }
-    .pagination button:hover {
-      background: #00ff88;
-    }
-    .pagination button.active {
-      background: #00ff88;
-      color: #000;
-      transform: scale(1.1);
-    }
-    .pagination button:disabled {
-      background: #333;
-      color: #777;
-      cursor: not-allowed;
-    }
-    footer {
-      text-align: center;
-      font-size: 13px;
-      color: #777;
-      margin-top: 25px;
+
+    @media (max-width: 768px) {
+      table { font-size: 14px; }
     }
   </style>
 </head>
 <body>
-  <h1>LAPORAN JAGA & JIMPITAN HARIAN RT 04 RW 01 LATSARI</h1>
+  <h1>📋 Laporan Jaga & Jimpitan Harian RT 04 RW 01 Latsari</h1>
 
+  <!-- Filter -->
   <div class="filter-container">
-    <label>Dari: <input type="date" id="startDate"></label>
-    <label>Sampai: <input type="date" id="endDate"></label>
-    <button onclick="applyFilter()">🔍 Filter</button>
-    <button onclick="resetFilter()">🔄 Reset</button>
+    <label>Dari:</label>
+    <input type="date" id="startDate" />
+    <label>Sampai:</label>
+    <input type="date" id="endDate" />
+    <button onclick="filterTanggal()">Filter</button>
+    <button onclick="resetFilter()">Reset</button>
   </div>
 
-  <table>
+  <!-- Search -->
+  <div class="filter-container">
+    <input type="text" id="searchInput" placeholder="🔍 Cari hari jaga, hadir, atau keterangan..." onkeyup="cariData()">
+  </div>
+
+  <!-- Table -->
+  <table id="dataTable">
     <thead>
       <tr>
         <th>No</th>
-        <th>Tanggal</th>
-        <th>Hari Jaga</th>
-        <th>Hadir</th>
-        <th>Izin</th>
-        <th>Alpha</th>
-        <th>Hasil (Rp)</th>
-        <th>Keterangan</th>
+        <th>TANGGAL</th>
+        <th>HARI JAGA</th>
+        <th>HADIR</th>
+        <th>IZIN</th>
+        <th>ALPHA</th>
+        <th>HASIL (Rp)</th>
+        <th>KETERANGAN</th>
       </tr>
     </thead>
-    <tbody id="table-body">
-      <tr><td colspan="8">⏳ Memuat data...</td></tr>
-    </tbody>
+    <tbody id="tableBody"></tbody>
   </table>
 
-  <div class="pagination" id="pagination"></div>
+  <!-- Export buttons -->
+  <div class="export-buttons">
+    <button onclick="downloadExcel()">📊 Unduh Excel</button>
+    <button onclick="downloadPDF()">📄 Unduh PDF</button>
+  </div>
 
-  <footer>Data otomatis diperbarui dari Google Sheet</footer>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.19.2/xlsx.full.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.23/jspdf.plugin.autotable.min.js"></script>
 
   <script>
-    const sheetId = "1g1fp70L86yFkZt6OcOQjdKK9kgtHmPb2TqLou7a-4Pw";
-    const sheetName = "Laporan Jimpitan Harian";
-    const query = encodeURIComponent("SELECT A,B,C,E,F,G,H,I");
-    const url = `https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?sheet=${sheetName}&tq=${query}`;
+    const sheetUrl = "https://opensheet.elk.sh/1g1fp70L86yFkZt6OcOQjdKK9kgtHmPb2TqLou7a-4Pw/View";
+    let semuaData = [];
 
-    let allData = [];
-    let filteredData = [];
-    let currentPage = 1;
-    const rowsPerPage = 10;
-
-    fetch(url)
-      .then(res => res.text())
-      .then(rep => {
-        const json = JSON.parse(rep.substr(47).slice(0, -2));
-        const rows = json.table.rows.map(r => r.c.map(c => (c ? c.v : "")));
-
-        const formatTanggal = (t) => {
-          // Deteksi format bawaan Google Sheets (Date atau string)
-          if (typeof t === "object" && t.f) return t.f;
-          if (typeof t === "string") {
-            // format manual (misal "21/10/2025")
-            const parts = t.split(/[\/\-]/);
-            if (parts.length === 3) {
-              const [d, m, y] = parts.map(Number);
-              return `${String(d).padStart(2, "0")}/${String(m).padStart(2, "0")}/${y}`;
-            }
-          }
-          return t;
-        };
-
-        allData = rows.map((r, i) => ({
-          no: i + 1,
-          tanggal: formatTanggal(r[1]),
-          hari: r[2],
-          hadir: r[3],
-          izin: r[4],
-          alpha: r[5],
-          hasil: r[6],
-          ket: r[7]
-        }));
-
-        allData = allData.reverse();
-        filteredData = allData;
-        renderTable();
+    fetch(sheetUrl)
+      .then(res => res.json())
+      .then(data => {
+        semuaData = data;
+        tampilkanData(data);
       })
-      .catch(err => {
-        document.getElementById("table-body").innerHTML =
-          `<tr><td colspan="8">❌ Gagal memuat data: ${err.message}</td></tr>`;
+      .catch(err => console.error("Gagal ambil data:", err));
+
+    function tampilkanData(data) {
+      const tbody = document.getElementById("tableBody");
+      tbody.innerHTML = "";
+      const lastData = data.slice(-10).reverse();
+
+      lastData.forEach((row, index) => {
+        const tr = document.createElement("tr");
+        tr.innerHTML = `
+          <td>${index + 1}</td>
+          <td>${row["TANGGAL"] || ""}</td>
+          <td>${row["HARI JAGA"] || ""}</td>
+          <td>${row["HADIR"] || ""}</td>
+          <td>${row["IZIN"] || ""}</td>
+          <td>${row["ALPHA"] || ""}</td>
+          <td>${row["HASIL (Rp)"] || ""}</td>
+          <td>${row["KETERANGAN"] || ""}</td>
+        `;
+        tbody.appendChild(tr);
       });
+    }
 
     function parseDateIndo(dateStr) {
-      // Menerima format "21/10/2025" atau "21 Oktober 2025"
+      if (!dateStr) return null;
+      dateStr = dateStr.replace(/^[A-Za-z]+,\s*/, "").trim();
       const bulan = {
         januari: 0, februari: 1, maret: 2, april: 3, mei: 4, juni: 5,
         juli: 6, agustus: 7, september: 8, oktober: 9, november: 10, desember: 11
@@ -201,98 +178,67 @@
       if (dateStr.includes("/")) {
         const [d, m, y] = dateStr.split("/").map(Number);
         return new Date(y, m - 1, d);
-      } else {
-        const parts = dateStr.split(" ");
-        const d = parseInt(parts[0]);
-        const m = bulan[parts[1].toLowerCase()];
-        const y = parseInt(parts[2]);
-        return new Date(y, m, d);
       }
+      const parts = dateStr.split(" ");
+      const d = parseInt(parts[0]);
+      const m = bulan[parts[1]?.toLowerCase()];
+      const y = parseInt(parts[2]);
+      if (isNaN(d) || isNaN(m) || isNaN(y)) return null;
+      return new Date(y, m, d);
     }
 
-    function renderTable() {
-      const tbody = document.getElementById("table-body");
-      tbody.innerHTML = "";
-      const start = (currentPage - 1) * rowsPerPage;
-      const end = start + rowsPerPage;
-      const dataToShow = filteredData.slice(start, end);
-
-      if (dataToShow.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="8">Tidak ada data</td></tr>`;
-        document.getElementById("pagination").innerHTML = "";
-        return;
-      }
-
-      dataToShow.forEach((row, index) => {
-        const tr = document.createElement("tr");
-        tr.innerHTML = `
-          <td>${start + index + 1}</td>
-          <td>${row.tanggal}</td>
-          <td>${row.hari}</td>
-          <td>${row.hadir}</td>
-          <td>${row.izin}</td>
-          <td>${row.alpha}</td>
-          <td class="hasil">${row.hasil}</td>
-          <td style="text-align:left">${row.ket}</td>
-        `;
-        tbody.appendChild(tr);
-      });
-
-      renderPagination();
-    }
-
-    function renderPagination() {
-      const pagination = document.getElementById("pagination");
-      pagination.innerHTML = "";
-      const totalPages = Math.ceil(filteredData.length / rowsPerPage);
-
-      const prevBtn = document.createElement("button");
-      prevBtn.textContent = "⬅️";
-      prevBtn.disabled = currentPage === 1;
-      prevBtn.onclick = () => { currentPage--; renderTable(); };
-      pagination.appendChild(prevBtn);
-
-      for (let i = 1; i <= totalPages; i++) {
-        const pageBtn = document.createElement("button");
-        pageBtn.textContent = i;
-        if (i === currentPage) pageBtn.classList.add("active");
-        pageBtn.onclick = () => { currentPage = i; renderTable(); };
-        pagination.appendChild(pageBtn);
-      }
-
-      const nextBtn = document.createElement("button");
-      nextBtn.textContent = "➡️";
-      nextBtn.disabled = currentPage === totalPages;
-      nextBtn.onclick = () => { currentPage++; renderTable(); };
-      pagination.appendChild(nextBtn);
-    }
-
-    function applyFilter() {
+    function filterTanggal() {
       const start = document.getElementById("startDate").value;
       const end = document.getElementById("endDate").value;
-      if (!start || !end) {
-        alert("Pilih tanggal awal dan akhir terlebih dahulu.");
-        return;
-      }
-
-      const startDate = new Date(start);
-      const endDate = new Date(end);
-
-      filteredData = allData.filter(row => {
-        const tgl = parseDateIndo(row.tanggal);
-        return tgl >= startDate && tgl <= endDate;
+      const rows = document.querySelectorAll("#dataTable tbody tr");
+      rows.forEach(row => {
+        const tglStr = row.cells[1].textContent.trim();
+        const tgl = parseDateIndo(tglStr);
+        if (!tgl) return (row.style.display = "none");
+        const startDate = start ? new Date(start) : null;
+        const endDate = end ? new Date(end) : null;
+        if ((!startDate || tgl >= startDate) && (!endDate || tgl <= endDate)) {
+          row.style.display = "";
+        } else {
+          row.style.display = "none";
+        }
       });
-
-      currentPage = 1;
-      renderTable();
     }
 
     function resetFilter() {
       document.getElementById("startDate").value = "";
       document.getElementById("endDate").value = "";
-      filteredData = allData;
-      currentPage = 1;
-      renderTable();
+      document.getElementById("searchInput").value = "";
+      tampilkanData(semuaData);
+    }
+
+    function cariData() {
+      const input = document.getElementById("searchInput").value.toLowerCase();
+      const rows = document.querySelectorAll("#dataTable tbody tr");
+      rows.forEach(row => {
+        const rowText = row.textContent.toLowerCase();
+        row.style.display = rowText.includes(input) ? "" : "none";
+      });
+    }
+
+    function downloadExcel() {
+      const wb = XLSX.utils.table_to_book(document.getElementById("dataTable"));
+      XLSX.writeFile(wb, "Laporan_Jimpitan_RT04.xlsx");
+    }
+
+    async function downloadPDF() {
+      const { jsPDF } = window.jspdf;
+      const doc = new jsPDF("l", "pt", "a4");
+
+      doc.text("LAPORAN JAGA & JIMPITAN HARIAN RT 04 RW 01 LATSARI", 40, 40);
+      doc.autoTable({
+        html: "#dataTable",
+        startY: 60,
+        styles: { fontSize: 8 },
+        headStyles: { fillColor: [88, 166, 255] },
+      });
+
+      doc.save("Laporan_Jimpitan_RT04.pdf");
     }
   </script>
 </body>
