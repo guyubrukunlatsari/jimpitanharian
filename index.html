@@ -1,171 +1,177 @@
 <!DOCTYPE html>
 <html lang="id">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>LAPORAN JAGA & JIMPITAN HARIAN RT 04 RW 01 LATSARI</title>
-  <style>
-    body { font-family: 'Segoe UI', sans-serif; background-color: #0f0f0f; color: #f1f1f1; margin: 0; padding: 20px; }
-    h1 { text-align: center; color: #00ff88; margin-bottom: 15px; }
-    .filter-container { display: flex; justify-content: center; align-items: center; gap: 10px; flex-wrap: wrap; margin-bottom: 15px; }
-    .filter-container input, .filter-container button { background: #1a1a1a; border: 1px solid #444; color: #fff; padding: 6px 10px; border-radius: 6px; }
-    .filter-container button { background: #00cc66; color: #000; font-weight: bold; cursor: pointer; transition: 0.2s; }
-    .filter-container button:hover { background: #00ff88; }
-    #searchBox { width: 200px; } #startDate,#endDate{width:140px;}
-    table { width: 100%; border-collapse: collapse; background: #1a1a1a; border-radius: 10px; overflow: hidden; }
-    th, td { padding: 10px 12px; text-align: center; border-bottom: 1px solid #333; }
-    th { background-color: #00cc66; color: #000; }
-    td.hasil { text-align: right; min-width: 130px; color: #00ff99; font-weight: bold; }
-    tr:nth-child(even) { background-color: #1e1e1e; }
-    tr:hover { background-color: #2a2a2a; }
-    .highlight { background-color: #00ff44; color: #000; font-weight: bold; border-radius: 3px; padding: 0 2px; }
-    .pagination { display: flex; justify-content: center; align-items: center; gap: 6px; margin-top: 20px; flex-wrap: wrap; }
-    .pagination button { background: #00cc66; color: #000; font-weight: bold; border: none; border-radius: 6px; padding: 6px 12px; cursor: pointer; transition: 0.2s; }
-    .pagination button:hover { background: #00ff88; }
-    .pagination button.active { background: #00ff88; color: #000; transform: scale(1.1); }
-    .pagination button:disabled { background: #333; color: #777; cursor: not-allowed; }
-    footer { text-align: center; font-size: 13px; color: #777; margin-top: 25px; }
-  </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>LAPORAN JAGA & JIMPITAN HARIAN RT 04 RW 01 LATSARI</title>
+<style>
+  body { font-family: 'Segoe UI', sans-serif; background-color: #0f0f0f; color: #f1f1f1; margin: 0; padding: 15px; }
+  h1 { text-align: center; color: #00ff88; margin-bottom: 15px; font-size: 1.5rem; }
+
+  .filter-container {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 15px;
+  }
+  .filter-container input, .filter-container button {
+    background: #1a1a1a;
+    border: 1px solid #444;
+    color: #fff;
+    padding: 6px 8px;
+    border-radius: 6px;
+    font-size: 0.9rem;
+  }
+  .filter-container button {
+    background: #00cc66;
+    color: #000;
+    font-weight: bold;
+    cursor: pointer;
+    transition: 0.2s;
+  }
+  .filter-container button:hover { background: #00ff88; }
+
+  .table-wrapper { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+  table { width: 100%; border-collapse: collapse; background: #1a1a1a; min-width: 700px; }
+  th, td { padding: 8px 10px; text-align: center; border-bottom: 1px solid #333; font-size: 0.85rem; }
+  th { background-color: #00cc66; color: #000; }
+  td.hasil { text-align: right; color: #00ff99; font-weight: bold; }
+  tr:nth-child(even) { background-color: #1e1e1e; }
+  tr:hover { background-color: #2a2a2a; }
+  .highlight { background-color: #00ff44; color: #000; font-weight: bold; border-radius: 3px; padding: 0 2px; }
+
+  .pagination { display: flex; justify-content: center; flex-wrap: wrap; gap: 5px; margin-top: 15px; }
+  .pagination button { font-size: 0.85rem; padding: 5px 8px; border-radius: 5px; }
+  .pagination button.active { background: #00ff88; color: #000; transform: scale(1.1); }
+  .pagination button:disabled { background: #333; color: #777; cursor: not-allowed; }
+
+  footer { text-align: center; font-size: 12px; color: #777; margin-top: 20px; }
+
+  @media (max-width: 600px) {
+    .filter-container input, .filter-container button { width: 100%; max-width: 220px; }
+    h1 { font-size: 1.2rem; }
+    table th, table td { font-size: 0.75rem; padding: 6px 5px; }
+  }
+</style>
 </head>
 <body>
-  <h1>LAPORAN JAGA & JIMPITAN HARIAN RT 04 RW 01 LATSARI</h1>
+<h1>LAPORAN JAGA & JIMPITAN HARIAN RT 04 RW 01 LATSARI</h1>
 
-  <div class="filter-container">
-    <label>Dari: <input type="date" id="startDate"></label>
-    <label>Sampai: <input type="date" id="endDate"></label>
-    <input type="text" id="searchBox" placeholder="🔎 Cari semua kolom..." />
-    <button onclick="resetFilter()">🔄 Reset</button>
-    <button onclick="exportPDF()">📄 Export PDF</button>
-  </div>
+<div class="filter-container">
+  <label>Dari: <input type="date" id="startDate"></label>
+  <label>Sampai: <input type="date" id="endDate"></label>
+  <input type="text" id="searchBox" placeholder="🔎 Cari semua kolom..." />
+  <button onclick="resetFilter()">🔄 Reset</button>
+  <button onclick="exportPDF()">📄 Export PDF</button>
+</div>
 
-  <table>
-    <thead>
-      <tr>
-        <th>No</th>
-        <th>Tanggal</th>
-        <th>Hari Jaga</th>
-        <th>Hadir</th>
-        <th>Izin</th>
-        <th>Alpha</th>
-        <th>Hasil (Rp)</th>
-        <th>Keterangan</th>
-      </tr>
-    </thead>
-    <tbody id="table-body"><tr><td colspan="8">⏳ Memuat data...</td></tr></tbody>
-  </table>
+<div class="table-wrapper">
+<table>
+  <thead>
+    <tr>
+      <th>No</th>
+      <th>Tanggal</th>
+      <th>Hari Jaga</th>
+      <th>Hadir</th>
+      <th>Izin</th>
+      <th>Alpha</th>
+      <th>Hasil (Rp)</th>
+      <th>Keterangan</th>
+    </tr>
+  </thead>
+  <tbody id="table-body"><tr><td colspan="8">⏳ Memuat data...</td></tr></tbody>
+</table>
+</div>
 
-  <div class="pagination" id="pagination"></div>
+<div class="pagination" id="pagination"></div>
+<footer>Data otomatis diperbarui dari Google Sheet</footer>
 
-  <footer>Data otomatis diperbarui dari Google Sheet</footer>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script>
+const sheetId="1g1fp70L86yFkZt6OcOQjdKK9kgtHmPb2TqLou7a-4Pw";
+const sheetName="Laporan Jimpitan Harian";
+const query=encodeURIComponent("SELECT A,B,C,E,F,G,H,I");
+const url=`https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?sheet=${sheetName}&tq=${query}`;
 
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-  <script>
-    const sheetId = "1g1fp70L86yFkZt6OcOQjdKK9kgtHmPb2TqLou7a-4Pw";
-    const sheetName = "Laporan Jimpitan Harian";
-    const query = encodeURIComponent("SELECT A,B,C,E,F,G,H,I");
-    const url = `https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?sheet=${sheetName}&tq=${query}`;
+let allData=[], filteredData=[], currentPage=1, rowsPerPage=10, currentKeyword="";
 
-    let allData=[], filteredData=[], currentPage=1, rowsPerPage=10, currentKeyword="";
-
-    fetch(url).then(res=>res.text()).then(rep=>{
-      const json=JSON.parse(rep.substr(47).slice(0,-2));
-      const rows=json.table.rows.map(r=>r.c.map(c=>c?c.v:""));
-
-      const parseDate=val=>{
-        if(!val) return {text:"", raw:new Date("1970-01-01")};
-        if(typeof val==="string" && val.includes("Date(")){
-          const m=val.match(/Date\((\d+),(\d+),(\d+)/);
-          if(m){ const d=new Date(m[1],m[2],m[3]); return {text:d.toLocaleDateString("id-ID",{day:"2-digit",month:"2-digit",year:"numeric"}), raw:d}; }
-        }
-        const d=new Date(val);
-        return {text:!isNaN(d)?d.toLocaleDateString("id-ID",{day:"2-digit",month:"2-digit",year:"numeric"}):val, raw:!isNaN(d)?d:new Date("1970-01-01")};
-      };
-
-      allData=rows.map((r,i)=>{
-        const t=parseDate(r[1]);
-        return {no:i+1,tanggalText:t.text,tanggalObj:t.raw,hari:r[2],hadir:r[3],izin:r[4],alpha:r[5],hasil:r[6],ket:r[7]};
-      });
-      allData.reverse();
-      filteredData=allData;
-      renderTable();
-    }).catch(err=>{
-      document.getElementById("table-body").innerHTML=`<tr><td colspan="8">❌ Gagal memuat data<br>${err.message}</td></tr>`;
-    });
-
-    function highlightText(text, keyword){ if(!keyword) return text; const regex=new RegExp(`(${keyword.replace(/[-/\\^$*+?.()|[\]{}]/g,'\\$&')})`,'gi'); return text.replace(regex,'<span class="highlight">$1</span>'); }
-
-    function getFilteredData(){
-      const startDateVal=document.getElementById("startDate").value;
-      const endDateVal=document.getElementById("endDate").value;
-      const startDate=startDateVal?new Date(startDateVal):null;
-      const endDate=endDateVal?new Date(endDateVal):null;
-
-      return allData.filter(row=>{
-        let matchDate=true; if(startDate && endDate) matchDate=row.tanggalObj>=startDate && row.tanggalObj<=endDate;
-        let matchText=currentKeyword?Object.values(row).some(val=>String(val).toLowerCase().includes(currentKeyword)):true;
-        return matchDate && matchText;
-      });
+fetch(url).then(res=>res.text()).then(rep=>{
+  const json=JSON.parse(rep.substr(47).slice(0,-2));
+  const rows=json.table.rows.map(r=>r.c.map(c=>c?c.v:""));
+  const parseDate=val=>{
+    if(!val) return {text:"", raw:new Date("1970-01-01")};
+    if(typeof val==="string" && val.includes("Date(")){
+      const m=val.match(/Date\((\d+),(\d+),(\d+)/);
+      if(m){ const d=new Date(m[1],m[2],m[3]); return {text:d.toLocaleDateString("id-ID",{day:"2-digit",month:"2-digit",year:"numeric"}), raw:d}; }
     }
+    const d=new Date(val);
+    return {text:!isNaN(d)?d.toLocaleDateString("id-ID",{day:"2-digit",month:"2-digit",year:"numeric"}):val, raw:!isNaN(d)?d:new Date("1970-01-01")};
+  };
+  allData=rows.map((r,i)=>{
+    const t=parseDate(r[1]);
+    return {no:i+1,tanggalText:t.text,tanggalObj:t.raw,hari:r[2],hadir:r[3],izin:r[4],alpha:r[5],hasil:r[6],ket:r[7]};
+  });
+  allData.reverse(); filteredData=allData; renderTable();
+}).catch(err=>{document.getElementById("table-body").innerHTML=`<tr><td colspan="8">❌ Gagal memuat data<br>${err.message}</td></tr>`;});
 
-    function renderTable(){
-      filteredData=getFilteredData();
-      const tbody=document.getElementById("table-body"); tbody.innerHTML="";
-      const start=(currentPage-1)*rowsPerPage; const end=start+rowsPerPage;
-      const dataToShow=filteredData.slice(start,end);
+function highlightText(text, keyword){ if(!keyword) return text; const regex=new RegExp(`(${keyword.replace(/[-/\\^$*+?.()|[\]{}]/g,'\\$&')})`,'gi'); return text.replace(regex,'<span class="highlight">$1</span>'); }
 
-      if(dataToShow.length===0){ tbody.innerHTML=`<tr><td colspan="8">Tidak ada data</td></tr>`; document.getElementById("pagination").innerHTML=""; return; }
+function getFilteredData(){
+  const startDateVal=document.getElementById("startDate").value;
+  const endDateVal=document.getElementById("endDate").value;
+  const startDate=startDateVal?new Date(startDateVal):null;
+  const endDate=endDateVal?new Date(endDateVal):null;
+  return allData.filter(row=>{
+    let matchDate=true; if(startDate && endDate) matchDate=row.tanggalObj>=startDate && row.tanggalObj<=endDate;
+    let matchText=currentKeyword?Object.values(row).some(val=>String(val).toLowerCase().includes(currentKeyword)):true;
+    return matchDate && matchText;
+  });
+}
 
-      dataToShow.forEach((row,index)=>{
-        const tr=document.createElement("tr");
-        tr.innerHTML=`
-          <td>${start+index+1}</td>
-          <td>${highlightText(row.tanggalText,currentKeyword)}</td>
-          <td>${highlightText(row.hari,currentKeyword)}</td>
-          <td>${highlightText(row.hadir,currentKeyword)}</td>
-          <td>${highlightText(row.izin,currentKeyword)}</td>
-          <td>${highlightText(row.alpha,currentKeyword)}</td>
-          <td class="hasil">${highlightText(row.hasil,currentKeyword)}</td>
-          <td style="text-align:left">${highlightText(row.ket,currentKeyword)}</td>
-        `;
-        tbody.appendChild(tr);
-      });
-      renderPagination();
-    }
+function renderTable(){
+  filteredData=getFilteredData();
+  const tbody=document.getElementById("table-body"); tbody.innerHTML="";
+  const start=(currentPage-1)*rowsPerPage; const end=start+rowsPerPage;
+  const dataToShow=filteredData.slice(start,end);
+  if(dataToShow.length===0){ tbody.innerHTML=`<tr><td colspan="8">Tidak ada data</td></tr>`; document.getElementById("pagination").innerHTML=""; return; }
+  dataToShow.forEach((row,index)=>{
+    const tr=document.createElement("tr");
+    tr.innerHTML=`
+      <td>${start+index+1}</td>
+      <td>${highlightText(row.tanggalText,currentKeyword)}</td>
+      <td>${highlightText(row.hari,currentKeyword)}</td>
+      <td>${highlightText(row.hadir,currentKeyword)}</td>
+      <td>${highlightText(row.izin,currentKeyword)}</td>
+      <td>${highlightText(row.alpha,currentKeyword)}</td>
+      <td class="hasil">${highlightText(row.hasil,currentKeyword)}</td>
+      <td style="text-align:left">${highlightText(row.ket,currentKeyword)}</td>
+    `;
+    tbody.appendChild(tr);
+  });
+  renderPagination();
+}
 
-    function renderPagination(){
-      const pagination=document.getElementById("pagination"); pagination.innerHTML="";
-      const totalPages=Math.ceil(filteredData.length/rowsPerPage);
-      if(totalPages<=1) return;
-      const prev=document.createElement("button"); prev.textContent="⬅️"; prev.disabled=currentPage===1; prev.onclick=()=>{currentPage--; renderTable();}; pagination.appendChild(prev);
-      for(let i=1;i<=totalPages;i++){ const b=document.createElement("button"); b.textContent=i; if(i===currentPage) b.classList.add("active"); b.onclick=()=>{currentPage=i; renderTable();}; pagination.appendChild(b);}
-      const next=document.createElement("button"); next.textContent="➡️"; next.disabled=currentPage===totalPages; next.onclick=()=>{currentPage++; renderTable();}; pagination.appendChild(next);
-    }
+function renderPagination(){
+  const pagination=document.getElementById("pagination"); pagination.innerHTML="";
+  const totalPages=Math.ceil(filteredData.length/rowsPerPage);
+  if(totalPages<=1) return;
+  const prev=document.createElement("button"); prev.textContent="⬅️"; prev.disabled=currentPage===1; prev.onclick=()=>{currentPage--; renderTable();}; pagination.appendChild(prev);
+  for(let i=1;i<=totalPages;i++){ const b=document.createElement("button"); b.textContent=i; if(i===currentPage) b.classList.add("active"); b.onclick=()=>{currentPage=i; renderTable();}; pagination.appendChild(b);}
+  const next=document.createElement("button"); next.textContent="➡️"; next.disabled=currentPage===totalPages; next.onclick=()=>{currentPage++; renderTable();}; pagination.appendChild(next);
+}
 
-    document.getElementById("searchBox").addEventListener("input",()=>{ currentKeyword=document.getElementById("searchBox").value.toLowerCase(); currentPage=1; renderTable(); });
-    document.getElementById("startDate").addEventListener("change",()=>{currentPage=1; renderTable();});
-    document.getElementById("endDate").addEventListener("change",()=>{currentPage=1; renderTable();});
+document.getElementById("searchBox").addEventListener("input",()=>{ currentKeyword=document.getElementById("searchBox").value.toLowerCase(); currentPage=1; renderTable(); });
+document.getElementById("startDate").addEventListener("change",()=>{currentPage=1; renderTable();});
+document.getElementById("endDate").addEventListener("change",()=>{currentPage=1; renderTable();});
 
-    function resetFilter(){ document.getElementById("searchBox").value=""; document.getElementById("startDate").value=""; document.getElementById("endDate").value=""; currentKeyword=""; filteredData=allData; currentPage=1; renderTable(); }
+function resetFilter(){ document.getElementById("searchBox").value=""; document.getElementById("startDate").value=""; document.getElementById("endDate").value=""; currentKeyword=""; filteredData=allData; currentPage=1; renderTable(); }
 
-    async function exportPDF(){
-      const { jsPDF }=window.jspdf;
-      const doc=new jsPDF();
-      doc.setFontSize(10);
-      let y=10;
-      doc.text("LAPORAN JAGA & JIMPITAN HARIAN RT 04 RW 01 LATSARI",10,y);
-      y+=10;
-      // header
-      const headers=["No","Tanggal","Hari Jaga","Hadir","Izin","Alpha","Hasil (Rp)","Keterangan"];
-      headers.forEach((h,i)=>doc.text(h,10+i*25,y));
-      y+=6;
-      // content
-      filteredData.forEach((row,index)=>{
-        const rowData=[start+index+1,row.tanggalText,row.hari,row.hadir,row.izin,row.alpha,row.hasil,row.ket];
-        rowData.forEach((c,i)=>doc.text(String(c),10+i*25,y));
-        y+=6; if(y>280){doc.addPage();y=10;}
-      });
-      doc.save("Laporan_RT04.pdf");
-    }
-  </script>
-</body>
-</html>
+async function exportPDF(){
+  const { jsPDF }=window.jspdf; const doc=new jsPDF();
+  doc.setFontSize(10); let y=10;
+  doc.text("LAPORAN JAGA & JIMPITAN HARIAN RT 04 RW 01 LATSARI",10,y); y+=10;
+  const headers=["No","Tanggal","Hari Jaga","Hadir","Izin","Alpha","Hasil (Rp)","Keterangan"];
+  headers.forEach((h,i)=>doc.text(h,10+i*25,y)); y+=6;
+  filteredData.forEach
